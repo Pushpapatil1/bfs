@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DFS Traversal </title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            margin: 20px;
+            background: linear-gradient(to right, #f8f9fa, #e0f7fa);
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px;
+            border-radius: 8px;
+            border: 1px solid #888;
+            outline: none;
+        }
+        button {
+            background: linear-gradient(to right, #00b09b, #96c93d);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button:hover {
+            background: linear-gradient(to right, #96c93d, #00b09b);
+        }
+        canvas {
+            border: 2px solid #ccc;
+            margin-top: 20px;
+            background: #ffffff;
+            box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+        }
+        #output, #theory {
+            margin-top: 20px;
+            font-size: 18px;
+            text-align: left;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        h2 {
+            color: #00b09b;
+            margin-top: 40px;
+        }
+        p, li {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        ul {
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+<h1>DFS Traversal </h1>
+
+<div id="theorySection">
+    <div id="theory">
+        <h2>Definition of DFS</h2>
+        <p><strong>Depth First Search (DFS)</strong> is an algorithm for traversing or searching tree or graph data structures. One starts at the root (selecting some arbitrary node as the root in the case of a graph) and explores as far as possible along each branch before backtracking.</p>
+
+        <h2>Steps of DFS</h2>
+        <ul>
+            <li>Start at the selected node (source).</li>
+            <li>Visit the node and mark it as visited.</li>
+            <li>Explore any adjacent unvisited nodes recursively (or using a stack).</li>
+            <li>Backtrack when no unvisited adjacent nodes remain.</li>
+            <li>Continue until all reachable nodes are visited.</li>
+        </ul>
+
+        <h2>Algorithm of DFS</h2>
+        <pre style="background:#f0f0f0;padding:10px;border-radius:8px;overflow-x:auto;">
+DFS(G, v):
+    Input: Graph G = (V, E) and starting vertex v ∈ V
+    Output: All vertices reachable from v, visited in DFS order
+
+    Mark v as visited
+    for each vertex u adjacent to v do
+        if u is not visited then
+            DFS(G, u)
+        </pre>
+
+        <p><strong>Time Complexity:</strong> O(V + E), where V is the number of vertices and E is the number of edges.</p>
+
+        <button onclick="showGraphSection()">Next</button>
+    </div>
+</div>
+
+<div id="graphSection" style="display:none;">
+    <div>
+        <input type="text" id="nodes" placeholder="Nodes (comma separated)">
+        <input type="text" id="matrix" placeholder="Adjacency Matrix (rows separated by ;)">
+        <button onclick="createGraph()">Create Graph</button>
+    </div>
+
+    <div id="startNodeDiv" style="display:none;">
+        <input type="text" id="startNode" placeholder="Start Node for DFS">
+        <button onclick="startDFS()">Start DFS</button>
+    </div>
+
+    <canvas id="graphCanvas" width="800" height="600"></canvas>
+
+    <div id="output"></div>
+</div>
+
+<script>
+    function showGraphSection() {
+        document.getElementById('theorySection').style.display = 'none';
+        document.getElementById('graphSection').style.display = 'block';
+    }
+
+    let graphMatrix = [];
+    let nodePositions = {};
+    let nodeNames = [];
+
+    const canvas = document.getElementById('graphCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function randomPosition() {
+        return {
+            x: Math.random() * 700 + 50,
+            y: Math.random() * 500 + 50
+        };
+    }
+
+    function randomColor() {
+        const colors = ['#FF6B6B', '#6BCB77', '#4D96FF', '#FFD93D', '#FF6F91', '#845EC2', '#00C9A7', '#FFC75F'];
+        return colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    function createGraph() {
+        const nodesInput = document.getElementById('nodes').value.trim();
+        const matrixInput = document.getElementById('matrix').value.trim();
+
+        if (!nodesInput || !matrixInput) {
+            alert("Please enter nodes and adjacency matrix!");
+            return;
+        }
+
+        nodeNames = nodesInput.split(',').map(n => n.trim());
+        const matrixRows = matrixInput.split(';').map(row => row.trim());
+
+        graphMatrix = matrixRows.map(row => row.split(',').map(num => parseInt(num)));
+
+        if (graphMatrix.length !== nodeNames.length) {
+            alert("Matrix size must match number of nodes!");
+            return;
+        }
+
+        nodePositions = {};
+        nodeNames.forEach(node => {
+            nodePositions[node] = randomPosition();
+        });
+
+        drawGraph();
+        document.getElementById('startNodeDiv').style.display = 'block';
+        document.getElementById('output').innerHTML = "";
+    }
+
+    function drawGraph(highlightedNode = null) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        ctx.strokeStyle = '#aaa';
+        ctx.lineWidth = 2;
+        for (let i = 0; i < nodeNames.length; i++) {
+            for (let j = i + 1; j < nodeNames.length; j++) {
+                if (graphMatrix[i][j] === 1) {
+                    ctx.beginPath();
+                    ctx.moveTo(nodePositions[nodeNames[i]].x, nodePositions[nodeNames[i]].y);
+                    ctx.lineTo(nodePositions[nodeNames[j]].x, nodePositions[nodeNames[j]].y);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        for (let i = 0; i < nodeNames.length; i++) {
+            const node = nodeNames[i];
+            ctx.beginPath();
+            ctx.arc(nodePositions[node].x, nodePositions[node].y, 20, 0, Math.PI * 2);
+            ctx.fillStyle = (node === highlightedNode) ? '#f39c12' : randomColor();
+            ctx.fill();
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.fillStyle = 'white';
+            ctx.font = '16px Poppins';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(node, nodePositions[node].x, nodePositions[node].y);
+        }
+    }
+
+    function startDFS() {
+        const start = document.getElementById('startNode').value.trim();
+        if (!nodeNames.includes(start)) {
+            alert('Start node not found in the graph!');
+            return;
+        }
+
+        let visited = new Set();
+        let stack = [];
+        let order = [];
+
+        stack.push(start);
+
+        const dfsInterval = setInterval(() => {
+            if (stack.length === 0) {
+                clearInterval(dfsInterval);
+
+                const V = nodeNames.length;
+                let E = 0;
+                for (let i = 0; i < V; i++) {
+                    for (let j = i + 1; j < V; j++) {
+                        if (graphMatrix[i][j] === 1) E++;
+                    }
+                }
+
+                let connectivity = (visited.size === V) ? 
+                    "<span style='color:green;font-weight:bold;'>CONNECTED</span>" :
+                    "<span style='color:red;font-weight:bold;'>DISCONNECTED</span>";
+
+                document.getElementById('output').innerHTML = `
+                    <p><strong>DFS Order:</strong> ${order.join(' → ')}</p>
+                    <p><strong>Time Complexity:</strong> O(V + E)</p>
+                    <p><strong>Where</strong> V = ${V}, E = ${E}</p>
+                    <p><strong>Graph is:</strong> ${connectivity}</p>
+                `;
+                return;
+            }
+
+            const node = stack.pop();
+            if (!visited.has(node)) {
+                visited.add(node);
+                order.push(node);
+
+                drawGraph(node);
+
+                let idx = nodeNames.indexOf(node);
+                for (let i = nodeNames.length - 1; i >= 0; i--) {
+                    if (graphMatrix[idx][i] === 1 && !visited.has(nodeNames[i])) {
+                        stack.push(nodeNames[i]);
+                    }
+                }
+            }
+        }, 700);
+    }
+</script>
+
+</body>
+</html>
